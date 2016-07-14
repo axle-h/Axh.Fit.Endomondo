@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Axh.Fit.Endomondo.Models;
 
 namespace Axh.Fit.Endomondo
@@ -19,10 +20,22 @@ namespace Axh.Fit.Endomondo
             {
                 // Scrape user id from endoConfig.
                 var userId = scraper.GetUserId();
+                if (!userId.HasValue)
+                {
+                    Console.Error.WriteLine("Cannot get Endomondo user id. Is your USER_TOKEN still valid? Try again with a new one.");
+                    return 1;
+                }
+
                 Console.WriteLine($"Found account id: {userId}");
 
                 // Scrape history from API.
-                var history = scraper.GetHistory(userId);
+                var history = scraper.GetHistory(userId.Value);
+                if (history?.Data == null || !history.Data.Any())
+                {
+                    Console.Error.WriteLine("No workout history found.");
+                    return 1;
+                }
+
                 Console.WriteLine($"Found {history.Data.Count} workouts.");
 
                 var format = commandLineArgs.TcxFileFormat ? "tcx" : "gpx";
@@ -40,7 +53,7 @@ namespace Axh.Fit.Endomondo
                         continue;
                     }
 
-                    var workout = scraper.GetWorkout(userId, data.Id, format);
+                    var workout = scraper.GetWorkout(userId.Value, data.Id, format);
                     File.WriteAllBytes(file, workout);
                     Console.WriteLine($" -> {workout.Length} bytes");
                 }

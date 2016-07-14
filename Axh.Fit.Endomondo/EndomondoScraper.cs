@@ -41,27 +41,26 @@ namespace Axh.Fit.Endomondo
         /// Gets the user identifier.
         /// </summary>
         /// <returns></returns>
-        public int GetUserId()
+        public int? GetUserId()
         {
             var htmlString = _client.DownloadString(HomeUrl);
             var html = new HtmlDocument();
             html.LoadHtml(htmlString);
 
             var scriptNode = html.DocumentNode.SelectNodes("//head//script")?.FirstOrDefault(x => x.InnerText.Contains("endoConfig"));
-
             if (scriptNode == null)
             {
-                throw new Exception("Cannot find endoConfig.");
+                return null;
             }
 
             var endoConfigMatch = Regex.Match(scriptNode.InnerText, @".+endoConfig\s*=\s*({.+});");
             if (!endoConfigMatch.Success || !endoConfigMatch.Groups[1].Success)
             {
-                throw new Exception("Cannot find endoConfig.");
+                return null;
             }
 
             var json = JObject.Parse(endoConfigMatch.Groups[1].Value);
-            return json.SelectToken("$.session.id").ToObject<int>();
+            return json.SelectToken("$.session.id")?.ToObject<int>();
         }
 
         /// <summary>
