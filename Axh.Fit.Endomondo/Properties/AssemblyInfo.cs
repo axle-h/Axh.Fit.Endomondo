@@ -13,9 +13,7 @@ using CommandLine;
 [assembly: AssemblyCopyright("Copyright © 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyUsage(
-    "Usage: Axh.Fit.Endomondo [options] -u endomondo_user_id",
-    "Must specify one of -t or -g.")]
+[assembly: AssemblyUsage("Usage: Axh.Fit.Endomondo [options] -u endomondo_user_id")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
