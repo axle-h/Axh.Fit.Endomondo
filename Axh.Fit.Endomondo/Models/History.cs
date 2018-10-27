@@ -5,7 +5,7 @@ namespace Axh.Fit.Endomondo.Models
     /// <summary>
     /// A history response from the rest v1 Endomondo API.
     /// </summary>
-    public class EndomondoHistory
+    public class History
     {
         /// <summary>
         /// Gets or sets the data.
@@ -13,6 +13,6 @@ namespace Axh.Fit.Endomondo.Models
         /// <value>
         /// The data.
         /// </value>
-        public ICollection<EndomondoWorkout> Data { get; set; }
+        public ICollection<Workout> Data { get; set; }
     }
 }

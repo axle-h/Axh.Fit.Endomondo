@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Axh.Fit.Endomondo.Models;
-using Axh.Fit.Endomondo.Properties;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,11 +13,8 @@ namespace Axh.Fit.Endomondo
 {
     public class EndomondoScraper : IDisposable
     {
-        private const string HomeUrl = "https://www.endomondo.com/home";
-        private const string HistoryUrl = "https://www.endomondo.com/rest/v1/users/{0}/workouts/history?offset=0&limit=9999";
-        private const string WorkoutUrl = "https://www.endomondo.com/rest/v1/users/{0}/workouts/{1}/export?format={2}";
-
-        private readonly WebClient _client;
+        private const string EndomondoUrl = "https://www.endomondo.com";
+        private readonly HttpClient _client;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EndomondoScraper"/> class.
@@ -25,25 +22,37 @@ namespace Axh.Fit.Endomondo
         /// <param name="userToken">The user token.</param>
         public EndomondoScraper(string userToken)
         {
-            _client = new WebClient { Encoding = Encoding.UTF8 };
-            var headers =
-                Resources.Chrome_Headers.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
-                         .Select(x => x.Split(new[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries));
-            foreach (var header in headers)
-            {
-                _client.Headers.Add(header[0], header[1]);
-            }
+            var cookieContainer = new CookieContainer();
+            var handler = new HttpClientHandler {CookieContainer = cookieContainer};
+            _client = new HttpClient(handler, true)
+                      {
+                          BaseAddress = new Uri(EndomondoUrl)
+                      };
 
-            _client.Headers.Add("Cookie", $"USER_TOKEN=\"{userToken}\"");
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; WOW64)");
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("AppleWebKit/537.36 (KHTML, like Gecko)");
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("Chrome/51.0.2704.103");
+            _client.DefaultRequestHeaders.UserAgent.ParseAdd("Safari/537.36");
+
+            _client.DefaultRequestHeaders.Accept.ParseAdd("text/html");
+            _client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            _client.DefaultRequestHeaders.Accept.ParseAdd("*/*;q=0.8");
+
+            _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-GB");
+            _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US;q=0.8");
+            _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en;q=0.6");
+            _client.DefaultRequestHeaders.Add("DNT", "1");
+
+            cookieContainer.Add(_client.BaseAddress, new Cookie("USER_TOKEN", userToken));
         }
 
         /// <summary>
         /// Gets the user identifier.
         /// </summary>
         /// <returns></returns>
-        public int? GetUserId()
+        public async Task<int?> GetUserIdAsync()
         {
-            var htmlString = _client.DownloadString(HomeUrl);
+            var htmlString = await _client.GetStringAsync("/home");
             var html = new HtmlDocument();
             html.LoadHtml(htmlString);
 
@@ -68,11 +77,11 @@ namespace Axh.Fit.Endomondo
         /// </summary>
         /// <param name="userId">The user identifier.</param>
         /// <returns></returns>
-        public EndomondoHistory GetHistory(int userId)
+        public async Task<History> GetHistoryAsync(int userId)
         {
-            var url = string.Format(HistoryUrl, userId);
-            var json = _client.DownloadString(url);
-            return JsonConvert.DeserializeObject<EndomondoHistory>(json);
+            var url = $"/rest/v1/users/{userId}/workouts/history?offset=0&limit=9999";
+            var json = await _client.GetStringAsync(url);
+            return JsonConvert.DeserializeObject<History>(json);
         }
 
         /// <summary>
@@ -82,10 +91,17 @@ namespace Axh.Fit.Endomondo
         /// <param name="workoutId">The workout identifier.</param>
         /// <param name="format">The format.</param>
         /// <returns></returns>
-        public byte[] GetWorkout(int userId, int workoutId, string format)
+        public async Task<WorkoutData> GetWorkout(int userId, int workoutId, string format)
         {
-            var url = string.Format(WorkoutUrl, userId, workoutId, format.ToUpper());
-            return _client.DownloadData(url);
+            var url = $"/rest/v1/users/{userId}/workouts/{workoutId}/export?format={format.ToUpper()}";
+            var result = await _client.GetAsync(url);
+            result.EnsureSuccessStatusCode();
+
+            return new WorkoutData
+                   {
+                       Length = (int) result.Content.Headers.ContentLength,
+                       Stream = await result.Content.ReadAsStreamAsync()
+                   };
         } 
 
         /// <summary>

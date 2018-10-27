@@ -1,5 +1,5 @@
-﻿using CommandLine;
-using CommandLine.Text;
+﻿using System.Collections.Generic;
+using CommandLine;
 
 namespace Axh.Fit.Endomondo.Models
 {
@@ -8,8 +8,6 @@ namespace Axh.Fit.Endomondo.Models
     /// </summary>
     public class CommandLineArgs
     {
-        private const string FileFormatSet = "file format";
-        
         /// <summary>
         /// Gets or sets the user token.
         /// </summary>
@@ -25,8 +23,8 @@ namespace Axh.Fit.Endomondo.Models
         /// <value>
         ///   <c>true</c> if [GPX file format]; otherwise, <c>false</c>.
         /// </value>
-        [Option('g', "gpx", DefaultValue = true, HelpText = "Download GPX format (recommended for Strava).", MutuallyExclusiveSet = FileFormatSet)]
-        public bool GpxFileFormat { get; set; }
+        [Option('g', "gpx", HelpText = "Download GPX format (recommended for Strava).")]
+        public bool Gpx { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether [TCX file format].
@@ -34,15 +32,25 @@ namespace Axh.Fit.Endomondo.Models
         /// <value>
         ///   <c>true</c> if [TCX file format]; otherwise, <c>false</c>.
         /// </value>
-        [Option('t', "tcx", HelpText = "Download TCX format.", MutuallyExclusiveSet = FileFormatSet)]
-        public bool TcxFileFormat { get; set; }
+        [Option('t', "tcx", HelpText = "Download TCX format.")]
+        public bool Tcx { get; set; }
 
         /// <summary>
-        /// Gets the usage.
+        /// Gets the formats.
         /// </summary>
         /// <returns></returns>
-        [HelpOption]
-        public string GetUsage() => HelpText.AutoBuild(this, current => HelpText.DefaultParsingErrorsHandler(this, current));
+        public IEnumerable<string> GetFormats()
+        {
+            if (Gpx)
+            {
+                yield return "gpx";
+            }
+
+            if (Tcx)
+            {
+                yield return "tcx";
+            }
+        }
 
     }
 }

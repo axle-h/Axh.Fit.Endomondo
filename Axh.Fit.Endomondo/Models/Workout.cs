@@ -6,7 +6,7 @@ namespace Axh.Fit.Endomondo.Models
     /// <summary>
     /// An Endomondo workout.
     /// </summary>
-    public class EndomondoWorkout
+    public class Workout
     {
         /// <summary>
         /// Gets or sets the identifier.

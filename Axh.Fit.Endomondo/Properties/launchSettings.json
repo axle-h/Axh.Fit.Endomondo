@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Axh.Fit.Endomondo": {
+      "commandName": "Project",
+      "commandLineArgs": "-gtu secret"
+    }
+  }
+}
