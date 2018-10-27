@@ -1,0 +1,20 @@
+defaults: &dotnet
+  docker:
+    - image: microsoft/dotnet:2.1.403-sdk
+  working_directory: ~/app
+
+version: 2
+jobs:
+  build:
+    <<: *dotnet
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: dotnet build
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build

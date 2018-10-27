@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/axle-h/Axh.Fit.Endomondo/tree/master.svg?&style=shield)](https://circleci.com/gh/axle-h/Axh.Fit.Endomondo/tree/master)
+
 # Axh.Fit.Endomondo
 
 Endomondo workout scraper.
