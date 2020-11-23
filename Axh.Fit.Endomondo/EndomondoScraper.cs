@@ -77,9 +77,9 @@ namespace Axh.Fit.Endomondo
         /// </summary>
         /// <param name="userId">The user identifier.</param>
         /// <returns></returns>
-        public async Task<History> GetHistoryAsync(int userId)
+        public async Task<History> GetHistoryAsync(int userId, int offset, int limit)
         {
-            var url = $"/rest/v1/users/{userId}/workouts/history?offset=0&limit=9999";
+            var url = $"/rest/v1/users/{userId}/workouts/history?offset={offset}&limit={limit}";
             var json = await _client.GetStringAsync(url);
             return JsonConvert.DeserializeObject<History>(json);
         }
