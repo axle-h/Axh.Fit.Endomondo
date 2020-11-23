@@ -40,42 +40,45 @@ namespace Axh.Fit.Endomondo
 
                 Console.WriteLine($"Found account id: {userId}");
 
-                // Scrape history from API.
-                var history = await scraper.GetHistoryAsync(userId.Value);
-                if (history?.Data == null || !history.Data.Any())
+                int offset = 0;
+                while(true)
                 {
-                    Console.Error.WriteLine("No workout history found.");
-                    return false;
-                }
-
-                Console.WriteLine($"Found {history.Data.Count} workouts.");
-                
-                // Slowly, synchronously scrape workouts. Not doing any parallel work as seems to trigger 429 responses.
-                foreach (var item in history.Data)
-                {
-                    foreach (var format in args.GetFormats())
+                    // Scrape history from API.
+                    Console.Error.WriteLine($"Processing workouts from offset={offset}");
+                    var history = await scraper.GetHistoryAsync(userId.Value, offset, 100);
+                    offset += 100;
+                    if (history?.Data == null || !history.Data.Any())
                     {
-                        var fileName = $"{item.Id}.{format}";
+                        Console.Error.WriteLine("No more workouts found.");
+                        return true;
+                    }
 
-                        Console.Write($"Saving workout: {item.LocalStartTime} -> {fileName} -> ");
+                    Console.WriteLine($"Found {history.Data.Count} workouts.");
 
-                        if (File.Exists(fileName))
+                    // Slowly, synchronously scrape workouts. Not doing any parallel work as seems to trigger 429 responses.
+                    foreach (var item in history.Data)
+                    {
+                        foreach (var format in args.GetFormats())
                         {
-                            Console.WriteLine("already exists.");
-                            continue;
-                        }
+                            var fileName = $"{item.Id}.{format}";
+                            Console.Write($" -> saving {fileName} ({item.LocalStartTime}) -> ");
 
-                        using (var data = await scraper.GetWorkout(userId.Value, item.Id, format))
-                        using (var file = File.OpenWrite(fileName))
-                        {
-                            await data.Stream.CopyToAsync(file);
-                            Console.WriteLine(data.Length.Bytes());
+                            if (File.Exists(fileName))
+                            {
+                                Console.WriteLine("already exists.");
+                                continue;
+                            }
+
+                            using (var data = await scraper.GetWorkout(userId.Value, item.Id, format))
+                            using (var file = File.OpenWrite(fileName))
+                            {
+                                await data.Stream.CopyToAsync(file);
+                                Console.WriteLine(data.Length.Bytes());
+                            }
                         }
                     }
-                }
+                } 
             }
-
-            return true;
         }
 
     }
