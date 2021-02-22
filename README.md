@@ -1,5 +1,8 @@
 [![CircleCI](https://circleci.com/gh/axle-h/Axh.Fit.Endomondo/tree/master.svg?&style=shield)](https://circleci.com/gh/axle-h/Axh.Fit.Endomondo/tree/master)
 
+> Endomondo [is dead](https://support.endomondo.com/hc/en-us/articles/360016251359-Endomondo-Is-Retired) 😭
+> I can't even login anymore so this tool is useless!
+
 # Axh.Fit.Endomondo
 
 Endomondo workout scraper.
